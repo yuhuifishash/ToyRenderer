@@ -9,6 +9,29 @@
 
 namespace SimplePathTracer
 {
+    RGB SimplePathTracerRenderer::getAmbientRGB(const Ray& r) {
+        if (scene.ambient.type == Ambient::Type::CONSTANT) {
+            return scene.ambient.constant;
+        }
+        else if (scene.ambient.type == Ambient::Type::ENVIROMENT_MAP) {
+            Texture& texture = scene.textures[scene.ambient.environmentMap.index()];
+            auto r_d = r.direction;
+            //环境映射
+            float m = sqrt(r_d.x * r_d.x + r_d.y * r_d.y + (r_d.z + 1) * (r_d.z + 1));
+            Vec3 n = { r_d.x / m ,r_d.y / m ,(r_d.z + 1) / m };
+            float u = r_d.x / (2 * m) + 0.5;
+            float v = r_d.y / (2 * m) + 0.5;
+            int x = u * texture.width;
+            int y = v * texture.height;
+            if (x <= 0) { x = 0; }
+            if (y <= 0) { y = 0; }
+            if (x >= texture.width) { x = texture.width - 1; }
+            if (y >= texture.height) { y = texture.height - 1; }
+            return texture.rgba[y*texture.width + x];
+        }
+        return { 0.f,0.f,0.f };
+    }
+
     RGB SimplePathTracerRenderer::gamma(const RGB& rgb) {
         return glm::sqrt(rgb);
     }
@@ -120,8 +143,17 @@ namespace SimplePathTracer
             float n_dot_in = glm::dot(hitObject->normal, scatteredRay.direction);
             float pdf = scattered.pdf;
             
-            //考虑折射
-            //......
+            //考虑折射 
+            RGB refraction_result{ 0.0f,0.0f,0.0f };
+            if (scattered.has_refraction) {
+                auto r_pdf = scattered.r_pdf;
+                auto r_attenuation = scattered.r_attenuation;
+                auto refraction_ray = scattered.r_ray;
+                auto refraction_next = trace(refraction_ray, currDepth + 1);
+                // BTDF
+                refraction_result += refraction_next * n_dot_in * r_attenuation / r_pdf;
+            }
+
             /**
              * emitted      - Le(p, w_0)
              * next         - Li(p, w_i)
@@ -129,14 +161,14 @@ namespace SimplePathTracer
              * atteunation  - BRDF
              * pdf          - p(w)
              **/
-            return emitted + attenuation * next * n_dot_in / pdf;
+            return emitted + attenuation * next * n_dot_in / pdf + refraction_result;
         }
         // 
         else if (t != FLOAT_INF) {
             return emitted;
         }
         else {
-            return scene.ambient.constant;
+            return getAmbientRGB(r);
         }
     }
 }

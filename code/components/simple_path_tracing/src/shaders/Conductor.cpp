@@ -21,7 +21,7 @@ namespace SimplePathTracer
     }
     Scattered Conductor::shade(const Ray& ray, const Vec3& hitPoint, const Vec3& normal) const {
         //镜面反射, 采样pdf = 1, 只采样反射光线
-        float pdf = 1;
+        float pdf = 1.f;
         //计算反射光线 R = I - 2(I dot N)N
         Vec3 Wr = ray.direction - 2 * (glm::dot(ray.direction, normal)) * normal;
         Wr = glm::normalize(Wr);

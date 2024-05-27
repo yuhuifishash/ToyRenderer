@@ -6,7 +6,7 @@ set(MY_COMPONENT_NAME "SimplePathTracing")
 file(GLOB_RECURSE COMP_HEADER_FILES "./include/*.h" "./include/*.hpp")
 source_group("Header Files" FILES ${COMP_HEADER_FILES})
 file(GLOB_RECURSE COMP_SOURCE_FILES "./src/*.cpp")
-add_library(${MY_COMPONENT_NAME} SHARED "${COMP_SOURCE_FILES}" "${COMP_HEADER_FILES}" "src/shaders/Conductor.cpp")
+add_library(${MY_COMPONENT_NAME} SHARED "${COMP_SOURCE_FILES}" "${COMP_HEADER_FILES}" "src/shaders/Conductor.cpp" "include/shaders/Dielectric.hpp" "src/shaders/Dielectric.cpp")
 target_link_libraries(${MY_COMPONENT_NAME} NRServer)
 
 include_directories("./include")

@@ -23,8 +23,6 @@ namespace SimplePathTracer
 }
 
 const static string description = 
-    "A Simple Path Tracer. "
-    "Only some simple primitives and materials(Lambertian) are supported."
-    "\nPlease use scene file : cornel_area_light.scn";
+    "A Simple Path Tracer. ";
 
 REGISTER_RENDERER(SimplePathTracer, description, SimplePathTracer::Adapter);

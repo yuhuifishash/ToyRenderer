@@ -51,6 +51,7 @@ namespace SimplePathTracer
     private:
         void renderTask(RGBA* pixels, int width, int height, int off, int step);
 
+        RGB getAmbientRGB(const Ray& r);
         RGB gamma(const RGB& rgb);
         RGB trace(const Ray& ray, int currDepth);
         HitRecord closestHitObject(const Ray& r);

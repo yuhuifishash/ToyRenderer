@@ -14,8 +14,9 @@ namespace SimplePathTracer
         float pdf = {0.f};
 
         bool has_refraction = false;
-        Ray refraction_ray = {};
-        float refraction_pdf = { 0.f };
+        Ray r_ray = {};
+        Vec3 r_attenuation = {};
+        float r_pdf = { 0.f };
      
     };
     
