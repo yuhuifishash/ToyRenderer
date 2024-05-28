@@ -1,9 +1,6 @@
 #include "shaders/Dielectric.hpp"
-#include "samplers/SamplerInstance.hpp"
 
-#include "Onb.hpp"
-
-namespace SimplePathTracer
+namespace PhotonMap
 {
     Vec3 Dielectric::fresnelSchlick(const Vec3& n, const Vec3& Wr) const {
         //n为单位法向量， Wr为单位反射向量
@@ -42,6 +39,7 @@ namespace SimplePathTracer
         float sin2ThetaT = ni_nt * ni_nt * sin2ThetaI;
         if (sin2ThetaT >= 1.0f - 0.00001f) {//全反射
             return {
+                true,
                 Ray{hitPoint, Wr},
                 attenuation,
                 Vec3{0},
@@ -55,6 +53,7 @@ namespace SimplePathTracer
         Vec3 r_attenuation = (1.f/(ni_nt * ni_nt)) * (Vec3{ 1.0,1.0,1.0 } - fresnelSchlick(normal, Wi)) 
                                 / abs(cosThetaI);
         return {
+            true,
             Ray{hitPoint, Wr},
             attenuation,
             Vec3{0},
