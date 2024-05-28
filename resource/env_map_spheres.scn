@@ -6,7 +6,7 @@ Prop diffuseColor RGB 0.725 0.71 0.68
 
 Material Glass 2
 
-Prop absorbed RGB 1 1 1 
+Prop reflect RGB 0.2 0.2 0.2 
 Prop ior Float 1.5
 
 End

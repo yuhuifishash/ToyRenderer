@@ -7,7 +7,7 @@ namespace SimplePathTracer
 {
     Vec3 Dielectric::fresnelSchlick(const Vec3& n, const Vec3& Wr) const {
         //n为单位法向量， Wr为单位反射向量
-        float cosTheta = glm::dot(n, Wr);
+        float cosTheta = abs(glm::dot(n, Wr));
         Vec3 reflect_inv = Vec3(1.0, 1.0, 1.0) - reflect;
         return reflect + reflect_inv * pow(1.0f - cosTheta, 5.0f);
     }
@@ -15,7 +15,7 @@ namespace SimplePathTracer
     Dielectric::Dielectric(Material& material, vector<Texture>& textures)
         : Shader(material, textures)
     {
-        auto reflect_ptr = material.getProperty<Property::Wrapper::RGBType>("absorbed");
+        auto reflect_ptr = material.getProperty<Property::Wrapper::RGBType>("reflect");
         if (reflect_ptr) reflect = (*reflect_ptr).value;
         else reflect = { 1, 1, 1 };
 
@@ -33,12 +33,36 @@ namespace SimplePathTracer
         
         //镜面折射
         float r_pdf = 1.f;
-
+        Vec3 Wi = -ray.direction;
+        //是否从物体外部到内部（我们只假设从空气到内部，或者由内部到空气）
+        bool is_out2in = glm::dot(normal, Wi) > 0;
+        float ni_nt = is_out2in ? 1 / ior : ior / 1;
+        float cosThetaI = glm::dot(normal, Wi);
+        float sin2ThetaI = max(0.f, 1.f - cosThetaI * cosThetaI);
+        float sin2ThetaT = ni_nt * ni_nt * sin2ThetaI;
+        if (sin2ThetaT >= 1.0f - 0.00001f) {//全反射
+            return {
+                Ray{hitPoint, Wr},
+                attenuation,
+                Vec3{0},
+                pdf,
+            };
+        }
+        //计算折射光线和BTDF
+        float cosThetaT = sqrt(1 - sin2ThetaT);
+        Vec3 Wt = ni_nt * (-Wi) + (ni_nt * cosThetaI - cosThetaT) * normal;
+        Wt = glm::normalize(Wt);
+        Vec3 r_attenuation = (1.f/(ni_nt * ni_nt)) * (Vec3{ 1.0,1.0,1.0 } - fresnelSchlick(normal, Wi)) 
+                                / abs(cosThetaI);
         return {
             Ray{hitPoint, Wr},
             attenuation,
             Vec3{0},
-            pdf
+            pdf,
+            true,
+            Ray{hitPoint,Wt},
+            r_attenuation,
+            r_pdf,
         };
     }
 }

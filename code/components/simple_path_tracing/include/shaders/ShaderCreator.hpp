@@ -5,6 +5,7 @@
 #include "Shader.hpp"
 #include "Lambertian.hpp"
 #include "Conductor.hpp"
+#include "Dielectric.hpp"
 
 namespace SimplePathTracer
 {
@@ -18,6 +19,9 @@ namespace SimplePathTracer
             {
             case 0:
                 shader = make_shared<Lambertian>(material, t);
+                break;
+            case 2:
+                shader = make_shared<Dielectric>(material, t);
                 break;
             case 3:
                 shader = make_shared<Conductor>(material, t);
