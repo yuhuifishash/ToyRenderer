@@ -134,6 +134,7 @@ namespace SimplePathTracer
         auto [ t, emitted ] = closestHitLight(r);
         // hit object
         if (hitObject && hitObject->t < t) {
+            // cout << r.origin << " " << hitObject->hitPoint << "\n";
             auto mtlHandle = hitObject->material;
             auto scattered = shaderPrograms[mtlHandle.index()]->shade(r, hitObject->hitPoint, hitObject->normal);
             auto scatteredRay = scattered.ray;
@@ -145,13 +146,14 @@ namespace SimplePathTracer
             
             //考虑折射 
             RGB refraction_result{ 0.0f,0.0f,0.0f };
-            if (scattered.has_refraction) {
+            if (scattered.has_refraction && currDepth <= 2) {
                 auto r_pdf = scattered.r_pdf;
                 auto r_attenuation = scattered.r_attenuation;
                 auto refraction_ray = scattered.r_ray;
+                // cout << "refraction\n";
                 auto refraction_next = trace(refraction_ray, currDepth + 1);
                 // BTDF
-                refraction_result += refraction_next * n_dot_in * r_attenuation / r_pdf;
+                refraction_result += refraction_next * abs(n_dot_in) * r_attenuation / r_pdf;
             }
 
             /**
@@ -161,7 +163,7 @@ namespace SimplePathTracer
              * atteunation  - BRDF
              * pdf          - p(w)
              **/
-            return emitted + attenuation * next * n_dot_in / pdf + refraction_result;
+            return emitted + attenuation * next * abs(n_dot_in) / pdf + refraction_result;
         }
         // 
         else if (t != FLOAT_INF) {

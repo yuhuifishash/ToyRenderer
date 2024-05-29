@@ -26,10 +26,16 @@ namespace SimplePathTracer
     Scattered Dielectric::shade(const Ray& ray, const Vec3& hitPoint, const Vec3& normal) const {
         //镜面反射
         float pdf = 1.f;
+
         //计算反射光线 R = I - 2(I dot N)N
-        Vec3 Wr = ray.direction - 2 * (glm::dot(ray.direction, normal)) * normal;
+        auto n = normal;
+        //法向量与法线方向是否一致
+        if (glm::dot(normal, ray.direction) > 0) {
+            n = -n;
+        }
+        Vec3 Wr = ray.direction - 2 * (glm::dot(ray.direction, n)) * n;
         Wr = glm::normalize(Wr);
-        Vec3 attenuation = fresnelSchlick(normal, Wr) / abs(glm::dot(ray.direction, normal));
+        Vec3 attenuation = fresnelSchlick(n, Wr) / abs(glm::dot(ray.direction, n));
         
         //镜面折射
         float r_pdf = 1.f;
@@ -37,7 +43,7 @@ namespace SimplePathTracer
         //是否从物体外部到内部（我们只假设从空气到内部，或者由内部到空气）
         bool is_out2in = glm::dot(normal, Wi) > 0;
         float ni_nt = is_out2in ? 1.f / ior : ior / 1.f;
-        float cosThetaI = glm::dot(normal, Wi);
+        float cosThetaI = abs(glm::dot(n, Wi));
         float sin2ThetaI = max(0.f, 1.f - cosThetaI * cosThetaI);
         float sin2ThetaT = ni_nt * ni_nt * sin2ThetaI;
         if (sin2ThetaT >= 1.0f - 0.00001f) {//全反射
@@ -50,9 +56,10 @@ namespace SimplePathTracer
         }
         //计算折射光线和BTDF
         float cosThetaT = sqrt(1 - sin2ThetaT);
-        Vec3 Wt = ni_nt * (-Wi) + (ni_nt * cosThetaI - cosThetaT) * normal;
+        Vec3 Wt = ni_nt * (-Wi) + (ni_nt * cosThetaI - cosThetaT) * n;
         Wt = glm::normalize(Wt);
-        Vec3 r_attenuation = (1.f/(ni_nt * ni_nt)) * (Vec3{ 1.0,1.0,1.0 } - fresnelSchlick(normal, Wi)) 
+        // cout <<ni_nt<<" " << Wi << " " << Wt << " " <<cosThetaI << " "<< cosThetaT << " " << ni_nt * cosThetaI - cosThetaT << "\n";
+        Vec3 r_attenuation = (1.f/(ni_nt * ni_nt)) * (Vec3{ 1.0,1.0,1.0 } - fresnelSchlick(n, Wi)) 
                                 / abs(cosThetaI);
         return {
             Ray{hitPoint, Wr},

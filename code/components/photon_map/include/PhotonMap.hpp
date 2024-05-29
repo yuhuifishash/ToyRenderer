@@ -4,6 +4,7 @@
 
 #include "scene/Scene.hpp"
 #include "Ray.hpp"
+#include "Camera.hpp"
 #include "intersections/HitRecord.hpp"
 #include "shaders/ShaderCreator.hpp"
 
@@ -28,6 +29,9 @@ namespace PhotonMap
         int PhotonNum;
         int maxPhotonNum;
         Photon* PhotonM;
+        //¹â×ÓÍ¼µÄ·¶Î§
+        Vec3 box_min;
+        Vec3 box_max;
         void StorePhoton(Photon* p);
     };
 
@@ -44,12 +48,16 @@ namespace PhotonMap
         unsigned int depth;
         unsigned int samples;
 
+        using SCam = Camera;
+        SCam camera;
+
         vector<SharedShader> shaderPrograms;
 
     public:
         PhotonMapRender(SharedScene spScene)
             : spScene(spScene)
             , scene(*spScene)
+            , camera(spScene->camera)
         {
             width = scene.renderOption.width;
             height = scene.renderOption.height;

@@ -24,7 +24,7 @@ namespace SimplePathTracer::Intersection
         w = glm::dot(e2, Q);
         float invDet = 1.f / det;
         w *= invDet;
-        if (w >= tMax || w < tMin) return getMissRecord();
+        if (w >= tMax || w < tMin || abs(w) < 1e-3) return getMissRecord();
         return getHitRecord(w, ray.at(w), normal, t.material);
 
     }
@@ -39,13 +39,13 @@ namespace SimplePathTracer::Intersection
         float sqrtDiscriminant = sqrt(discriminant);
         if (discriminant > 0) {
             float temp = (-b - sqrtDiscriminant) / a;
-            if (temp < tMax && temp >= tMin) {
+            if (temp < tMax && temp >= tMin && abs(temp) > 1e-3) {
                 auto hitPoint = ray.at(temp);
                 auto normal = (hitPoint - position)/r;
                 return getHitRecord(temp, hitPoint, normal, s.material);
             }
             temp = (-b + sqrtDiscriminant) / a;
-            if (temp < tMax && temp >= tMin) {
+            if (temp < tMax && temp >= tMin && abs(temp) > 1e-3) {
                 auto hitPoint = ray.at(temp);
                 auto normal = (hitPoint - position)/r;
                 return getHitRecord(temp, hitPoint, normal, s.material);
@@ -58,7 +58,7 @@ namespace SimplePathTracer::Intersection
         if (Np_dot_d < 0.0000001f && Np_dot_d > -0.00000001f) return getMissRecord();
         float dp = -glm::dot(p.position, p.normal);
         float t = (-dp - glm::dot(p.normal, ray.origin))/Np_dot_d;
-        if (t >= tMax || t < tMin) return getMissRecord();
+        if (t >= tMax || t < tMin || abs(t) < 1e-6) return getMissRecord();
         // cross test
         Vec3 hitPoint = ray.at(t);
         Vec3 normal = p.normal;
