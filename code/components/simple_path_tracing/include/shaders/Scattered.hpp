@@ -8,6 +8,7 @@ namespace SimplePathTracer
 {
     struct Scattered
     {
+        bool is_specular = false;
         Ray ray = {};
         Vec3 attenuation = {};
         Vec3 emitted = {};

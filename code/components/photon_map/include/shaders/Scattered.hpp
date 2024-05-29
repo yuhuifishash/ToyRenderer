@@ -8,7 +8,7 @@ namespace PhotonMap
 {
     struct Scattered
     {
-        bool has_specular = false;
+        bool is_specular = false;
         Ray ray = {};
         Vec3 attenuation = {};
         Vec3 emitted = {};

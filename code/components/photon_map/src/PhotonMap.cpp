@@ -1,6 +1,7 @@
 #include "server/Server.hpp"
 
 #include "PhotonMap.hpp"
+#include "samplers/HemisphereNormal.hpp"
 
 #include "VertexTransformer.hpp"
 #include "intersections/intersections.hpp"
@@ -33,10 +34,45 @@ namespace PhotonMap
 
 
     tuple<Ray, float> PhotonMapRender::generatePhoton(HitRecord hit) {
+        //暂时只支持面光源
         int len1 = scene.areaLightBuffer.size();
-        int len2 = scene.pointLightBuffer.size();
+        auto r = defaultSamplerInstance<UniformSampler>().sample1d();
+        int id = round(r * (len1 - 1));
+        auto& light = scene.areaLightBuffer[len1];
+        Vec3 start = light.position;
+        start = start + light.u * defaultSamplerInstance<UniformSampler>().sample1d();
+        start = start + light.v * defaultSamplerInstance<UniformSampler>().sample1d();
+        
+        auto direction = defaultSamplerInstance<HemiSphere>().sample3d();
+        Vec3 normal = glm::cross(light.u, light.v);
+        float powerScale = abs(glm::dot(direction, normal));
+        return{
+            Ray{start,direction},
+            powerScale
+        };
+    }
 
-        return{};
+    void PhotonMapRender::TracePhoton(const Ray& r, int currDepth, Vec3 power) {
+        if (currDepth == depth) {
+            return;
+        }
+        auto hitObject = closestHitObject(r);
+        if (hitObject) {//与物体相交
+            // cout << r.origin << " " << hitObject->hitPoint << "\n";
+            auto mtlHandle = hitObject->material;
+            auto scattered = shaderPrograms[mtlHandle.index()]->shade(r, hitObject->hitPoint, hitObject->normal);
+            //镜面反射/折射
+            if (scattered.is_specular) {
+                TracePhoton(scattered.ray, currDepth + 1, power);
+                if (scattered.has_refraction) {
+                    TracePhoton(scattered.r_ray, currDepth + 1, power);
+                }
+            }
+            else {
+
+            }
+
+        }
     }
 
 

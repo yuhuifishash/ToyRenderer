@@ -7,7 +7,7 @@ namespace PhotonMap
             const auto& v1 = t.v1;
             const auto& v2 = t.v2;
             const auto& v3 = t.v3;
-            const auto& normal = glm::normalize(t.normal);
+            const auto& normal = t.normal;
             auto e1 = v2 - v1;
             auto e2 = v3 - v1;
             auto P = glm::cross(ray.direction, e2);
@@ -25,7 +25,7 @@ namespace PhotonMap
             w = glm::dot(e2, Q);
             float invDet = 1.f / det;
             w *= invDet;
-            if (w >= tMax || w <= tMin) return getMissRecord();
+            if (w >= tMax || w < tMin || abs(w) < 1e-3) return getMissRecord();
             return getHitRecord(w, ray.at(w), normal, t.material);
 
         }
@@ -40,13 +40,13 @@ namespace PhotonMap
             float sqrtDiscriminant = sqrt(discriminant);
             if (discriminant > 0) {
                 float temp = (-b - sqrtDiscriminant) / a;
-                if (temp < tMax && temp > tMin) {
+                if (temp < tMax && temp >= tMin && abs(temp) > 1e-3) {
                     auto hitPoint = ray.at(temp);
                     auto normal = (hitPoint - position) / r;
                     return getHitRecord(temp, hitPoint, normal, s.material);
                 }
                 temp = (-b + sqrtDiscriminant) / a;
-                if (temp < tMax && temp > tMin) {
+                if (temp < tMax && temp >= tMin && abs(temp) > 1e-3) {
                     auto hitPoint = ray.at(temp);
                     auto normal = (hitPoint - position) / r;
                     return getHitRecord(temp, hitPoint, normal, s.material);
@@ -55,14 +55,14 @@ namespace PhotonMap
             return getMissRecord();
         }
         HitRecord xPlane(const Ray& ray, const Plane& p, float tMin, float tMax) {
-            Vec3 normal = glm::normalize(p.normal);
-            auto Np_dot_d = glm::dot(ray.direction, normal);
+            auto Np_dot_d = glm::dot(ray.direction, p.normal);
             if (Np_dot_d < 0.0000001f && Np_dot_d > -0.00000001f) return getMissRecord();
-            float dp = -glm::dot(p.position, normal);
-            float t = (-dp - glm::dot(normal, ray.origin)) / Np_dot_d;
-            if (t >= tMax || t <= tMin) return getMissRecord();
+            float dp = -glm::dot(p.position, p.normal);
+            float t = (-dp - glm::dot(p.normal, ray.origin)) / Np_dot_d;
+            if (t >= tMax || t < tMin || abs(t) < 1e-6) return getMissRecord();
             // cross test
             Vec3 hitPoint = ray.at(t);
+            Vec3 normal = p.normal;
             Mat3x3 d{ p.u, p.v, glm::cross(p.u, p.v) };
             d = glm::inverse(d);
             auto res = d * (hitPoint - p.position);
@@ -79,7 +79,7 @@ namespace PhotonMap
             if (Np_dot_d < 0.0000001f && Np_dot_d > -0.00000001f) return getMissRecord();
             float dp = -glm::dot(position, normal);
             float t = (-dp - glm::dot(normal, ray.origin)) / Np_dot_d;
-            if (t >= tMax || t <= tMin) return getMissRecord();
+            if (t >= tMax || t < tMin) return getMissRecord();
             // cross test
             Vec3 hitPoint = ray.at(t);
             Mat3x3 d{ a.u, a.v, glm::cross(a.u, a.v) };

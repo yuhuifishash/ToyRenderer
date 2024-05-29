@@ -1,6 +1,6 @@
 #pragma once
-#ifndef __HEMI_SPHERE_HPP__
-#define __HEMI_SPHERE_HPP__
+#ifndef __HEMI_SPHERENormal_HPP__
+#define __HEMI_SPHERENormal_HPP__
 
 #include "Sampler3d.hpp"
 #include <ctime>
@@ -27,7 +27,7 @@ namespace PhotonMap
             Vec3 res;
             do {
                 res = Vec3(u(e), u(e), u(e));
-            } while (glm::dot(res, res) >= 1.0 - 1e-12 || glm::dot(res, res) <= 1e-12 || dot(res, n) < 0);
+            } while (glm::dot(res, res) >= 1.0 - 1e-4 || glm::dot(res, res) <= 1e-4 || glm::dot(res, normal) < 0);
             return glm::normalize(res);
         }
     };

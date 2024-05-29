@@ -27,6 +27,7 @@ namespace SimplePathTracer
         Wr = glm::normalize(Wr);
         Vec3 attenuation = fresnelSchlick(normal, Wr) / abs(glm::dot(ray.direction,normal));
         return {
+            true,
             Ray{hitPoint, Wr},
             attenuation,
             Vec3{0},

@@ -152,8 +152,9 @@ namespace SimplePathTracer
                 auto refraction_ray = scattered.r_ray;
                 // cout << "refraction\n";
                 auto refraction_next = trace(refraction_ray, currDepth + 1);
+                float r_n_dot_in = glm::dot(hitObject->normal, refraction_ray.direction);
                 // BTDF
-                refraction_result += refraction_next * abs(n_dot_in) * r_attenuation / r_pdf;
+                refraction_result += refraction_next * abs(r_n_dot_in) * r_attenuation / r_pdf;
             }
 
             /**

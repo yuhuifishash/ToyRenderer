@@ -71,7 +71,7 @@ namespace PhotonMap
 
         tuple<Ray, float> generatePhoton(HitRecord hit);// <ray, power_scale>
         void generatePhotonMap();
-        void TracePhoton(const Ray& r, int depth, Vec3 power);
+        void TracePhoton(const Ray& r, int currDepth, Vec3 power);
         HitRecord closestHitObject(const Ray& r);
     };
 }

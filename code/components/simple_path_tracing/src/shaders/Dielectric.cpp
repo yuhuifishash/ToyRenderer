@@ -48,6 +48,7 @@ namespace SimplePathTracer
         float sin2ThetaT = ni_nt * ni_nt * sin2ThetaI;
         if (sin2ThetaT >= 1.0f - 0.00001f) {//È«·´Éä
             return {
+                true,
                 Ray{hitPoint, Wr},
                 attenuation,
                 Vec3{0},
@@ -62,6 +63,7 @@ namespace SimplePathTracer
         Vec3 r_attenuation = (1.f/(ni_nt * ni_nt)) * (Vec3{ 1.0,1.0,1.0 } - fresnelSchlick(n, Wi)) 
                                 / abs(cosThetaI);
         return {
+            true,
             Ray{hitPoint, Wr},
             attenuation,
             Vec3{0},

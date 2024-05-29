@@ -15,20 +15,6 @@ namespace SimplePathTracer
     Scattered Lambertian::shade(const Ray& ray, const Vec3& hitPoint, const Vec3& normal) const {
         Vec3 origin = hitPoint;
         Vec3 random = defaultSamplerInstance<HemiSphere>().sample3d();
-        // if (normal == Vec3{0, 0, 1}) {
-        //     direction = random;
-        // }
-        // else if (normal == Vec3{0, 0, -1}) {
-        //     direction = -random;
-        // }
-        // else {
-        //     Vec3 z{0, 0, 1};
-        //     float angle = -acos(glm::dot(z, normal));
-        //     Vec3 axis =  glm::cross(normal, z);
-        //     Mat4x4 rotate = glm::rotate(Mat4x4{1}, angle, axis);
-        //     direction = rotate*Vec4{random, 1};
-        // }
-        // direction = glm::normalize(direction);
 
         Onb onb{normal};
         Vec3 direction = glm::normalize(onb.local(random));
@@ -38,6 +24,7 @@ namespace SimplePathTracer
         auto attenuation = albedo / PI;
 
         return {
+            false,
             Ray{origin, direction},
             attenuation,
             Vec3{0},
