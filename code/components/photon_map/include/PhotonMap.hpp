@@ -16,6 +16,7 @@ namespace PhotonMap
 
     class Photon
     {
+    public:
         Vec3 Pos;
         Vec3 Direction;
         Vec3 Power;
@@ -24,7 +25,7 @@ namespace PhotonMap
     class PhotonMap
     {
     public:
-        PhotonMap();
+        PhotonMap(int photonSampleNum);
         ~PhotonMap();
         int PhotonNum;
         int maxPhotonNum;
@@ -32,7 +33,10 @@ namespace PhotonMap
         //光子图的范围
         Vec3 box_min;
         Vec3 box_max;
-        void StorePhoton(Photon* p);
+        void StorePhoton(Photon p);
+        std::vector<Photon> GetNearestNPhotons(Vec3 pos, int N, int R);
+        RGB DensityEstimates(Vec3 pos);
+        void PrintPhotonMap();
     };
 
     class PhotonMapRender
@@ -52,6 +56,7 @@ namespace PhotonMap
         SCam camera;
 
         vector<SharedShader> shaderPrograms;
+        PhotonMap* GlobalpnMap;
 
     public:
         PhotonMapRender(SharedScene spScene)
@@ -63,16 +68,27 @@ namespace PhotonMap
             height = scene.renderOption.height;
             depth = scene.renderOption.depth;
             samples = scene.renderOption.samplesPerPixel;
+            GlobalpnMap = nullptr;
         }
-        ~PhotonMapRender() = default;
+        ~PhotonMapRender() 
+        {
+            if (GlobalpnMap != nullptr) {
+                delete  GlobalpnMap;
+            }
+        };
 
         using RenderResult = tuple<RGBA*, unsigned int, unsigned int>;
         RenderResult render();
 
-        tuple<Ray, float> generatePhoton(HitRecord hit);// <ray, power_scale>
-        void generatePhotonMap();
-        void TracePhoton(const Ray& r, int currDepth, Vec3 power);
+        tuple<Ray, Vec3> generatePhoton();// <ray, power>
+        void createGlobalPhotonMap();
+        void PathTracingWithPhotonMap(RGBA* pixels);
+        void PathTracingWithPhotonMapTask(RGBA* pixels, int width, int height, int off, int step);//用于并行
+        void TraceGlobalPhoton(const Ray& r, int currDepth, Vec3 power);
+        RGB TraceWithPm(const Ray& r, int currDepth);
+        RGB getAmbientRGB(const Ray& r);
         HitRecord closestHitObject(const Ray& r);
+        tuple<float, Vec3> closestHitLight(const Ray& r);
     };
 }
 

@@ -21,4 +21,4 @@ namespace PhotonMap
 }
 
 // REGISTER_RENDERER(Name, Description, Class)
-REGISTER_RENDERER(PhotonMap, "光子映射", PhotonMap::Adapter);
+REGISTER_RENDERER(PhotonMap, "光子映射+路径追踪混合渲染算法", PhotonMap::Adapter);

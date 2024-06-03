@@ -143,6 +143,71 @@ namespace SimplePathTracer
             auto next = trace(scatteredRay, currDepth+1);
             float n_dot_in = glm::dot(hitObject->normal, scatteredRay.direction);
             float pdf = scattered.pdf;
+
+            //对光源重要性采样
+            bool is_sample_light = false;//是否对光源进行重要性采样
+
+            //Vec3 next2{ 0.f,0.f,0.f };//对光源重要性采样结果，只支持单一面光源
+            //float pdf2 = 1;
+            //float n_dot_in2 = 1;
+            //if (!scattered.is_specular) {//漫反射表面，考虑对光源进行重要性采样
+            //    //由于计算两次采样平均值，所以不需要判断光线是否被物体遮挡
+            //    is_sample_light = true;
+            //    //判断是否存在环境光
+            //    if (scene.ambient.type != Ambient::Type::CONSTANT) {
+            //        is_sample_light = false;
+            //    }
+            //    if (scene.ambient.constant.x > 1e-4 || scene.ambient.constant.y > 1e-4 || scene.ambient.constant.z > 1e-4) {
+            //        is_sample_light = false;
+            //    }
+            //    if (scene.areaLightBuffer.size() < 1) {
+            //        is_sample_light = false;
+            //    }
+            //    if (currDepth >= depth - 1) {
+            //        is_sample_light = false;
+            //    }
+            //    if (is_sample_light) {//对光源进行重要性采样
+            //        //首先选择其中一个面光源(这里我们直接平均随机选择一个)
+            //        int len = scene.areaLightBuffer.size();
+            //        auto rand = defaultSamplerInstance<UniformSampler>().sample1d();
+            //        int id = round(rand * (len - 1));
+            //        auto& light = scene.areaLightBuffer[id];
+
+            //        //在平面上随机选择一个点
+            //        Vec3 target = light.position;
+            //        target = target + light.u * defaultSamplerInstance<UniformSampler>().sample1d();
+            //        target = target + light.v * defaultSamplerInstance<UniformSampler>().sample1d();
+
+            //        //计算光线方向
+            //        Vec3 to_light = target - hitObject->hitPoint;
+            //        to_light = glm::normalize(to_light);
+            //        //需要保证反射光线与法线夹角为正
+            //        if (glm::dot(to_light, hitObject->normal) < 0) {
+            //            is_sample_light = false;
+            //        }
+            //        else {//发射一条光线
+            //            auto hitLight = Intersection::xAreaLight(
+            //                Ray{ hitObject->hitPoint,to_light }, light, 0.000001, FLOAT_INF);
+
+            //            if (hitLight) {//必定击中光源或物体，但是防止浮点误差
+            //                // cout << "hit Light\n";
+            //                next2 = trace(Ray{ hitObject->hitPoint,to_light }, currDepth + 1);
+            //                //计算pdf  ||x-x'||2
+            //                pdf2 = glm::distance(hitLight->hitPoint,hitObject->hitPoint);
+            //                pdf2 = pdf2 * pdf2;
+            //                auto light_normal = glm::cross(light.u,light.v);
+            //                pdf2 /= glm::length(light_normal);
+            //                pdf2 /= len;
+            //                light_normal = glm::normalize(light_normal);
+            //                pdf2 /= abs(glm::dot(light_normal,to_light));
+            //                n_dot_in2 = glm::dot(hitObject->normal,to_light);
+            //            }
+            //            else {
+            //                is_sample_light = false;
+            //            }
+            //        } 
+            //    }
+            //}
             
             //考虑折射 
             RGB refraction_result{ 0.0f,0.0f,0.0f };
@@ -156,6 +221,11 @@ namespace SimplePathTracer
                 // BTDF
                 refraction_result += refraction_next * abs(r_n_dot_in) * r_attenuation / r_pdf;
             }
+
+            //if (is_sample_light) {//多重采样，求平均值
+            //    return emitted + ((attenuation * next * abs(n_dot_in) / pdf
+            //        + attenuation * next2 * abs(n_dot_in2) / pdf2) / 2.0f) + refraction_result;
+            //}
 
             /**
              * emitted      - Le(p, w_0)
