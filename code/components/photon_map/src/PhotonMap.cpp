@@ -131,9 +131,28 @@ namespace PhotonMap
             auto scattered = shaderPrograms[mtlHandle.index()]->shade(r, hitObject->hitPoint, hitObject->normal);
             //镜面反射/折射
             if (scattered.is_specular) {//反射
+                int NBxDf = (int)scattered.is_specular + (int)scattered.has_refraction;
+                float cosTheta = abs(glm::dot(scattered.ray.direction, hitObject->normal));
+                Vec3 nPower = power * scattered.attenuation * cosTheta / scattered.pdf;
 
+                TraceCausticsPhoton(scattered.ray, currDepth + 1, nPower / (float)NBxDf);
+
+                if (scattered.has_refraction) {//折射
+                    float r_cosTheta = abs(glm::dot(scattered.r_ray.direction, hitObject->normal));
+                    Vec3 r_nPower = power * scattered.r_attenuation * r_cosTheta / scattered.r_pdf;
+
+                    TraceCausticsPhoton(scattered.r_ray, currDepth + 1, r_nPower / (float)NBxDf);
+                }
             }
-            else {//漫反射
+            else {//漫反射表面 不再继续反射
+                //如果经过了至少一次镜面反射/折射，则记录该光子
+                if (currDepth > 0) {
+                    Photon pn;
+                    pn.Pos = hitObject->hitPoint;
+                    pn.Direction = r.direction;
+                    pn.Power = power;
+                    CausticspnMap->StorePhoton(pn);
+                }
             }
         }
     }
@@ -184,8 +203,8 @@ namespace PhotonMap
         if (hitObject && hitObject->t < t) {
             // cout << r.origin << " " << hitObject->hitPoint << "\n";
             auto mtlHandle = hitObject->material;
-            auto scattered = shaderPrograms[mtlHandle.index()]->shade(r, hitObject->hitPoint, hitObject->normal);
 
+            auto scattered = shaderPrograms[mtlHandle.index()]->shade(r, hitObject->hitPoint, hitObject->normal);
             if (scattered.is_specular) {//镜面反射/折射
                 auto scatteredRay = scattered.ray;
                 auto attenuation = scattered.attenuation;
@@ -209,6 +228,16 @@ namespace PhotonMap
                 return emitted + attenuation * next * abs(n_dot_in) / pdf + refraction_result;
             }
             else {//漫反射
+                //计算漫反射表面的直接照明(直接对光源采样)
+                
+
+                //计算焦散
+
+
+                //计算间接漫反射， 
+                //额外反射一次，估计击中位置附近的全局光子（多次重复该过程，同时该反射不能击中光源）
+
+
                 return GlobalpnMap->DensityEstimates(hitObject->hitPoint, scattered.attenuation, false);
             }
         }

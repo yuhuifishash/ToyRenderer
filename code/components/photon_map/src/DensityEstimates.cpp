@@ -36,7 +36,14 @@ namespace PhotonMap
 
     //我们假设只会在漫反射表明进行光子能量的评估
     RGB PhotonMap::DensityEstimates(Vec3 pos, Vec3 BRDF, bool is_Caustics) {
-        auto [photons, max_r2] = GetNearestNPhotons(pos,EstimatesN,EstimmatesR);
+        int N = 0;
+        if (!is_Caustics) {
+            N = EstimatesN;
+        }
+        else {
+            N = CausticsEstimatesN;
+        }
+        auto [photons, max_r2] = GetNearestNPhotons(pos,N,EstimmatesR);
 
         Vec3 res;
         for (const auto& p : photons) {
