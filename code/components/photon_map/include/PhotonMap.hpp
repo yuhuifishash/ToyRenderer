@@ -28,14 +28,22 @@ namespace PhotonMap
         PhotonMap(int photonSampleNum);
         ~PhotonMap();
         int PhotonNum;
+        int PhotonSampleNum;
         int maxPhotonNum;
         Photon* PhotonM;
         //光子图的范围
         Vec3 box_min;
         Vec3 box_max;
         void StorePhoton(Photon p);
-        std::vector<Photon> GetNearestNPhotons(Vec3 pos, int N, int R);
-        RGB DensityEstimates(Vec3 pos);
+        tuple<std::vector<Photon>, float> GetNearestNPhotons(Vec3 pos, int N, float R);
+
+
+        const int EstimatesN = 500;
+        const int CausticsEstimatesN = 50;
+
+        const float EstimmatesR = 100;
+        RGB DensityEstimates(Vec3 pos, Vec3 BRDF, bool is_Caustics);
+
         void PrintPhotonMap();
     };
 
@@ -57,6 +65,10 @@ namespace PhotonMap
 
         vector<SharedShader> shaderPrograms;
         PhotonMap* GlobalpnMap;
+        PhotonMap* CausticspnMap;
+
+        const int PhotonSampleNum = 200000;
+        const int CausticPhotonSampleNum = 50000;
 
     public:
         PhotonMapRender(SharedScene spScene)
@@ -69,11 +81,15 @@ namespace PhotonMap
             depth = scene.renderOption.depth;
             samples = scene.renderOption.samplesPerPixel;
             GlobalpnMap = nullptr;
+            CausticspnMap = nullptr;
         }
         ~PhotonMapRender() 
         {
             if (GlobalpnMap != nullptr) {
                 delete  GlobalpnMap;
+            }
+            if (CausticspnMap != nullptr) {
+                delete CausticspnMap;
             }
         };
 
@@ -82,9 +98,12 @@ namespace PhotonMap
 
         tuple<Ray, Vec3> generatePhoton();// <ray, power>
         void createGlobalPhotonMap();
+        void createCausticsPhotonMap();
         void PathTracingWithPhotonMap(RGBA* pixels);
         void PathTracingWithPhotonMapTask(RGBA* pixels, int width, int height, int off, int step);//用于并行
         void TraceGlobalPhoton(const Ray& r, int currDepth, Vec3 power);
+        void TraceCausticsPhoton(const Ray& r, int currDepth, Vec3 power);
+
         RGB TraceWithPm(const Ray& r, int currDepth);
         RGB getAmbientRGB(const Ray& r);
         HitRecord closestHitObject(const Ray& r);

@@ -25,6 +25,7 @@ namespace PhotonMap
         vertexTransformer.exec(spScene);
 
         createGlobalPhotonMap();
+        createCausticsPhotonMap();
         //  GlobalpnMap->PrintPhotonMap();
         PathTracingWithPhotonMap(pixels);
 
@@ -72,7 +73,7 @@ namespace PhotonMap
         float cosTheta = abs(glm::dot(direction, normal));
         return{
             Ray{start,direction},
-            cosTheta * light.radiance / (A*4*PI),//均匀选择光源上一个点，对该点进行球形均匀采样
+            cosTheta * light.radiance * A * 4.f * PI,//均匀选择光源上一个点，对该点进行球形均匀采样
         };
     }
 
@@ -119,8 +120,27 @@ namespace PhotonMap
         }
     }
 
+    void PhotonMapRender::TraceCausticsPhoton(const Ray& r, int currDepth, Vec3 power) {
+        if (currDepth == depth) {
+            return;
+        }
+        auto hitObject = closestHitObject(r);
+        if (hitObject) {//与物体相交
+            // cout << r.origin << " " << hitObject->hitPoint << "\n";
+            auto mtlHandle = hitObject->material;
+            auto scattered = shaderPrograms[mtlHandle.index()]->shade(r, hitObject->hitPoint, hitObject->normal);
+            //镜面反射/折射
+            if (scattered.is_specular) {//反射
+
+            }
+            else {//漫反射
+            }
+        }
+    }
+
     PhotonMap::PhotonMap(int photonSampleNum) {
-        maxPhotonNum = photonSampleNum * 32;
+        PhotonSampleNum = photonSampleNum;
+        maxPhotonNum = photonSampleNum * 8;
         PhotonNum = 0;
         PhotonM = new Photon[maxPhotonNum];
         box_min = Vec3(1e6, 1e6, 1e6);
@@ -141,11 +161,18 @@ namespace PhotonMap
     }
 
     void PhotonMapRender::createGlobalPhotonMap() {
-        const int PhotonSampleNum = 10000;
         GlobalpnMap = new PhotonMap(PhotonSampleNum);
         for (int i = 0; i < PhotonSampleNum; ++i) {
             auto [ray,power] = generatePhoton();
             TraceGlobalPhoton(ray, 0, power);
+        }
+    }
+
+    void PhotonMapRender::createCausticsPhotonMap() {
+        GlobalpnMap = new PhotonMap(CausticPhotonSampleNum);
+        for (int i = 0; i < PhotonSampleNum; ++i) {
+            auto [ray, power] = generatePhoton();
+            TraceCausticsPhoton(ray, 0, power);
         }
     }
 
@@ -182,7 +209,7 @@ namespace PhotonMap
                 return emitted + attenuation * next * abs(n_dot_in) / pdf + refraction_result;
             }
             else {//漫反射
-                return { 0,0,0 };
+                return GlobalpnMap->DensityEstimates(hitObject->hitPoint, scattered.attenuation, false);
             }
         }
         //击中光源
@@ -202,17 +229,13 @@ namespace PhotonMap
         for (int i = off; i < height; i += step) {
             for (int j = 0; j < width; j++) {
                 Vec3 color{ 0, 0, 0 };
-                for (int k = 0; k < samples; k++) {
-                    auto r = defaultSamplerInstance<UniformInSquare>().sample2d();
-                    float rx = r.x;
-                    float ry = r.y;
-                    float x = (float(j) + rx) / float(width);
-                    float y = (float(i) + ry) / float(height);
-                    auto ray = camera.shoot(x, y);
-                    color += TraceWithPm(ray, 0);
-                }
-                color /= samples;
-                color = gamma(color);
+                auto r = defaultSamplerInstance<UniformInSquare>().sample2d();
+                float rx = r.x;
+                float ry = r.y;
+                float x = (float(j) + rx) / float(width);
+                float y = (float(i) + ry) / float(height);
+                auto ray = camera.shoot(x, y);
+                color = TraceWithPm(ray, 0);
                 pixels[(height - i - 1) * width + j] = { color, 1 };
             }
         }
