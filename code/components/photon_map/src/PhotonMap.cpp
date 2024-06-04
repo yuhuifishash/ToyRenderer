@@ -169,7 +169,7 @@ namespace PhotonMap
     }
 
     void PhotonMapRender::createCausticsPhotonMap() {
-        GlobalpnMap = new PhotonMap(CausticPhotonSampleNum);
+        CausticspnMap = new PhotonMap(CausticPhotonSampleNum);
         for (int i = 0; i < PhotonSampleNum; ++i) {
             auto [ray, power] = generatePhoton();
             TraceCausticsPhoton(ray, 0, power);

@@ -31,7 +31,6 @@ namespace PhotonMap
             res.push_back(PhotonM[V[i].photon_index]);
             max_r2 = max(max_r2, V[i].d2);
         }
-
         return {res,max_r2};
     }
 
