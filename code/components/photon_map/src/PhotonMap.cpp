@@ -268,7 +268,7 @@ namespace PhotonMap
                 if (diffuse_cnt != 0) {
                     IndirectDiffUseLight /= diffuse_cnt;
                 }
-                return DirectLight + IndirectDiffUseLight;
+                return DirectLight + IndirectDiffUseLight + CausticsLight;
             }
         }
         //»÷ÖÐ¹âÔ´
@@ -300,6 +300,7 @@ namespace PhotonMap
                 color /= samples;
                 color = gamma(color);
                 pixels[(height - i - 1) * width + j] = { color, 1 };
+                
             }
         }
     }

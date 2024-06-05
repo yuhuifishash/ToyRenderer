@@ -34,10 +34,11 @@ namespace PhotonMap
         if (photons.size() == 0 || abs(max_r2) < 1e-4) {
             return { 0.f,0.f,0.f };
         }
-        Vec3 res;
+        Vec3 res(0.f, 0.f, 0.f);
         for (const auto& p : photons) {
             res += BRDF * p->Power;
         }
+        
         return res/(PI*max_r2*PhotonSampleNum*4);
     }
 
