@@ -7,6 +7,7 @@
 #include "Camera.hpp"
 #include "intersections/HitRecord.hpp"
 #include "shaders/ShaderCreator.hpp"
+#include "PhotonKdTree.hpp"
 
 #include <tuple>
 namespace PhotonMap
@@ -34,15 +35,19 @@ namespace PhotonMap
         //¹â×ÓÍ¼µÄ·¶Î§
         Vec3 box_min;
         Vec3 box_max;
-        void StorePhoton(Photon p);
-        tuple<std::vector<Photon>, float> GetNearestNPhotons(Vec3 pos, int N, float R);
 
+        PhotonKdTree* KdTree;
+        void BuildKdTree();
+
+        void StorePhoton(Photon p);
+        tuple<std::vector<Photon>, float> GetNearestNPhotons(const Vec3& pos, int N, float R);
+        tuple<std::vector<Photon>, float> GetNearestNPhotonsDebug(const Vec3& pos, int N, float R);
 
         const int EstimatesN = 500;
         const int CausticsEstimatesN = 50;
 
         const float EstimmatesR = 100;
-        RGB DensityEstimates(Vec3 pos, Vec3 BRDF, bool is_Caustics);
+        RGB DensityEstimates(const Vec3& pos, const Vec3& BRDF, bool is_Caustics);
 
         void PrintPhotonMap();
     };
@@ -105,6 +110,9 @@ namespace PhotonMap
         void TraceCausticsPhoton(const Ray& r, int currDepth, Vec3 power);
 
         RGB TraceWithPm(const Ray& r, int currDepth);
+        tuple<bool, RGB> SampleDirectLight(const Vec3& hitPoint, const Vec3& normal, const Vec3& BRDF);
+        tuple<bool, RGB> SampleIndirectDiffUseLight(const Vec3& hitPoint, const Vec3& normal, const Vec3& BRDF);
+
         RGB getAmbientRGB(const Ray& r);
         HitRecord closestHitObject(const Ray& r);
         tuple<float, Vec3> closestHitLight(const Ray& r);

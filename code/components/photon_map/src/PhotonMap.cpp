@@ -26,6 +26,8 @@ namespace PhotonMap
 
         createGlobalPhotonMap();
         createCausticsPhotonMap();
+
+        GlobalpnMap->BuildKdTree();
         //  GlobalpnMap->PrintPhotonMap();
         PathTracingWithPhotonMap(pixels);
 
@@ -107,7 +109,6 @@ namespace PhotonMap
                 pn.Direction = r.direction;
                 pn.Power = power;
                 GlobalpnMap->StorePhoton(pn);
-
                 // 1/6的概率被吸收
                 float rand = defaultSamplerInstance<UniformSampler>().sample1d();
                 if (rand > 1.0f/6.0f) {//光子没有被吸收
@@ -164,9 +165,13 @@ namespace PhotonMap
         PhotonM = new Photon[maxPhotonNum];
         box_min = Vec3(1e6, 1e6, 1e6);
         box_max = Vec3(-1e6, -1e6, -1e6);
+        KdTree = nullptr;
     }
 
     PhotonMap::~PhotonMap() {
+        if (KdTree != nullptr) {
+            delete KdTree;
+        }
         delete[]PhotonM;
     }
 
@@ -229,16 +234,36 @@ namespace PhotonMap
             }
             else {//漫反射
                 //计算漫反射表面的直接照明(直接对光源采样)
-                
+                Vec3 DirectLight(0.f, 0.f, 0.f);
+                int direct_cnt = 0;
+                for (int i = 0; i < 4; ++i) {
+                    auto [tag, L] = SampleDirectLight(hitObject->hitPoint, hitObject->normal, scattered.attenuation);
+                    if (tag) {
+                        direct_cnt += 1;
+                    }
+                    DirectLight += L;
+                }
+                if (direct_cnt != 0) {
+                    DirectLight /= direct_cnt;
+                }
 
                 //计算焦散
-
-
+                Vec3 CausticsLight = CausticspnMap->DensityEstimates(hitObject->hitPoint, scattered.attenuation, true);
                 //计算间接漫反射， 
                 //额外反射一次，估计击中位置附近的全局光子（多次重复该过程，同时该反射不能击中光源）
-
-
-                return GlobalpnMap->DensityEstimates(hitObject->hitPoint, scattered.attenuation, false);
+                Vec3 IndirectDiffUseLight(0.f, 0.f, 0.f);
+                int diffuse_cnt = 0;
+                for (int i = 0; i < 4; ++i) {
+                    auto [tag, L] = SampleIndirectDiffUseLight(hitObject->hitPoint, hitObject->normal, scattered.attenuation);
+                    if (tag) {
+                        diffuse_cnt += 1;
+                    }
+                    IndirectDiffUseLight += L;
+                }
+                if (diffuse_cnt != 0) {
+                    IndirectDiffUseLight /= diffuse_cnt;
+                }
+                return DirectLight + IndirectDiffUseLight;
             }
         }
         //击中光源
@@ -257,14 +282,18 @@ namespace PhotonMap
     void PhotonMapRender::PathTracingWithPhotonMapTask(RGBA* pixels, int width, int height, int off, int step) {
         for (int i = off; i < height; i += step) {
             for (int j = 0; j < width; j++) {
-                Vec3 color{ 0, 0, 0 };
-                auto r = defaultSamplerInstance<UniformInSquare>().sample2d();
-                float rx = r.x;
-                float ry = r.y;
-                float x = (float(j) + rx) / float(width);
-                float y = (float(i) + ry) / float(height);
-                auto ray = camera.shoot(x, y);
-                color = TraceWithPm(ray, 0);
+                Vec3 color(0.f, 0.f, 0.f);
+                for (int k = 0; k < samples; k++) {
+                    auto r = defaultSamplerInstance<UniformInSquare>().sample2d();
+                    float rx = r.x;
+                    float ry = r.y;
+                    float x = (float(j) + rx) / float(width);
+                    float y = (float(i) + ry) / float(height);
+                    auto ray = camera.shoot(x, y);
+                    color += TraceWithPm(ray, 0);
+                }
+                color /= samples;
+                color = gamma(color);
                 pixels[(height - i - 1) * width + j] = { color, 1 };
             }
         }

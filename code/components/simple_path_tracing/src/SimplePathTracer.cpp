@@ -147,7 +147,7 @@ namespace SimplePathTracer
             //对光源重要性采样
             bool is_sample_light = false;//是否对光源进行重要性采样
 
-            //Vec3 next2{ 0.f,0.f,0.f };//对光源重要性采样结果，只支持单一面光源
+            //Vec3 next2{ 0.f,0.f,0.f };//对光源重要性采样结果
             //float pdf2 = 1;
             //float n_dot_in2 = 1;
             //if (!scattered.is_specular) {//漫反射表面，考虑对光源进行重要性采样
