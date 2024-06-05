@@ -7,10 +7,10 @@ namespace PhotonMap
 {
 
     //<photons, max_r2>
-    tuple<std::vector<Photon*>,float> PhotonMap::GetNearestNPhotons(const Vec3& pos, int N, float R) {
+    tuple<std::vector<Photon*>,float> PhotonMap::GetNearestNPhotons(const Vec3& pos, int N, float R2) {
         NearestPhotonsHandler handler;
         handler.N = N;
-        handler.max_r2 = R;
+        handler.max_r2 = R2;
         handler.X = pos;
         KdTree->GetNearestNPhotons(handler, KdTree->root);
         std::vector<Photon*> res;
@@ -30,15 +30,15 @@ namespace PhotonMap
         else {
             N = CausticsEstimatesN;
         }
-        auto [photons, max_r2] = GetNearestNPhotons(pos,N,EstimmatesR);
-        if (photons.size() == 0) {
+        auto [photons, max_r2] = GetNearestNPhotons(pos,N,EstimmatesR2);
+        if (photons.size() == 0 || abs(max_r2) < 1e-4) {
             return { 0.f,0.f,0.f };
         }
         Vec3 res;
         for (const auto& p : photons) {
             res += BRDF * p->Power;
         }
-        return res/(PI*max_r2*PhotonSampleNum);
+        return res/(PI*max_r2*PhotonSampleNum*4);
     }
 
     tuple<bool, RGB> PhotonMapRender::SampleDirectLight(const Vec3& hitPoint, const Vec3& normal, const Vec3& BRDF) {

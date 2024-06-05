@@ -40,13 +40,13 @@ namespace PhotonMap
         void BuildKdTree();
 
         void StorePhoton(Photon p);
-        tuple<std::vector<Photon*>, float> GetNearestNPhotons(const Vec3& pos, int N, float R);
-        tuple<std::vector<Photon*>, float> GetNearestNPhotonsDebug(const Vec3& pos, int N, float R);
+        tuple<std::vector<Photon*>, float> GetNearestNPhotons(const Vec3& pos, int N, float R2);
+        tuple<std::vector<Photon*>, float> GetNearestNPhotonsDebug(const Vec3& pos, int N, float R2);
 
         const int EstimatesN = 500;
         const int CausticsEstimatesN = 50;
 
-        const float EstimmatesR = 100;
+        const float EstimmatesR2 = 100;
         RGB DensityEstimates(const Vec3& pos, const Vec3& BRDF, bool is_Caustics);
 
         void PrintPhotonMap();

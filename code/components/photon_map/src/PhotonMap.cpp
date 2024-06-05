@@ -24,6 +24,10 @@ namespace PhotonMap
         VertexTransformer vertexTransformer{};
         vertexTransformer.exec(spScene);
 
+        //≤‚ ‘¥˙¬Î
+        /*PhotonMap tmp(1000);
+        tmp.KdTreeTest();*/
+
         createGlobalPhotonMap();
         createCausticsPhotonMap();
 

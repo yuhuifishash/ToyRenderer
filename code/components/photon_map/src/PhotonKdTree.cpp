@@ -2,6 +2,14 @@
 
 namespace PhotonMap
 {
+	PhotonKdTree::PhotonKdTree(int pNum, Photon* Pns) {
+		PhotonNum = pNum;
+		T = new PhotonKdTreeNode[pNum + 5ll];
+		for (int i = 0; i < pNum; ++i) {
+			Vp.push_back(Pns + i);
+		}
+	}
+
 	void PhotonMap::BuildKdTree() {
 		KdTree = new PhotonKdTree(PhotonNum, PhotonM);
 		int rt = KdTree->BuildKdTree(0, PhotonNum - 1, 0);
@@ -30,6 +38,10 @@ namespace PhotonMap
 		nth_element(Vp.begin() + l, Vp.begin() + mid, Vp.begin() + r + 1,[&](Photon* x, Photon* y) {
 			return x->Pos[axis] < y->Pos[axis];
 		});
+		/*cout << mid << "     ";
+		for (auto x : Vp) {
+			cout << x->Pos << " ";
+		}cout << "\n";*/
 		T[x].axis = axis;
 		T[x].P = Vp[mid];
 
@@ -66,7 +78,8 @@ namespace PhotonMap
 		}
 
 		//考虑当前节点的光子
-		if (d_tmp2 < handler.max_r2) {
+		float dis = glm::dot(now.P->Pos - handler.X, now.P->Pos - handler.X);
+		if (dis < handler.max_r2) {
 			handler.q.push(pqnode(handler.X,now.P));
 			if (handler.q.size() > handler.N) { // 光子数超过N
 				handler.q.pop();

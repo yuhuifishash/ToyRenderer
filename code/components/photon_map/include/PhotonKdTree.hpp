@@ -40,13 +40,7 @@ namespace PhotonMap
 		vector<Photon*> Vp;
 	public:
 		int root = -1;
-		PhotonKdTree(int pNum, Photon* Pns) {
-			PhotonNum = pNum;
-			T = new PhotonKdTreeNode[pNum+5ll];
-			for (int i = 0; i < pNum; ++i) {
-				Vp.push_back(Pns);
-			}
-		}
+		PhotonKdTree(int pNum, Photon* Pns);
 		~PhotonKdTree() {
 			delete[]T;
 			Vp.clear();

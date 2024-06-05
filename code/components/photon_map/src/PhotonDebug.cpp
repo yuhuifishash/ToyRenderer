@@ -18,13 +18,13 @@ namespace PhotonMap
     };
 
     //<photons, max_r2>
-    tuple<std::vector<Photon*>, float> PhotonMap::GetNearestNPhotonsDebug(const Vec3& pos, int N, float R) {
+    tuple<std::vector<Photon*>, float> PhotonMap::GetNearestNPhotonsDebug(const Vec3& pos, int N, float R2) {
         //we use brute_force first
         std::vector<pdnode> V;
         for (int i = 0; i < PhotonNum; ++i) {
             auto p = PhotonM[i];
             float d2 = glm::dot(pos - p.Pos, pos - p.Pos);
-            if (d2 <= R) {
+            if (d2 <= R2) {
                 V.push_back({ i,d2 });
             }
         }
@@ -48,7 +48,7 @@ namespace PhotonMap
         for (int i = 0; i < space; ++i) {
             cout << " ";
         }
-        cout << T[idx].P->Pos << "  " << T[idx].axis;
+        cout << T[idx].P->Pos << "  " << T[idx].axis << "\n";
 
         PrintKdTree(T[idx].ls, space + 2);
         PrintKdTree(T[idx].rs, space + 2);
@@ -62,5 +62,26 @@ namespace PhotonMap
         StorePhoton(P);
         P.Pos = { 1,2,3 };
         StorePhoton(P);
+        P.Pos = { 1,2,2 };
+        StorePhoton(P);
+        P.Pos = { 1,2,1 };
+        StorePhoton(P);
+
+        PrintPhotonMap();
+
+        BuildKdTree();
+        KdTree->PrintKdTree(KdTree->root,0);
+
+        auto [photons, max_r2] = GetNearestNPhotons({ 9,9,9 }, 4, 100);
+        cout <<"KDTree: " << max_r2 << "   ";
+        for (auto p : photons) {
+            cout << p->Pos << " ";
+        }cout << "\n";
+
+        /*auto [tphotons, tmax_r2] = GetNearestNPhotonsDebug({ 9,9,9 }, 4, 100);
+        cout <<"Debug:  " << tmax_r2 << "   ";
+        for (auto p : tphotons) {
+            cout << p->Pos << " ";
+        }cout << "\n";*/
     }
 }
