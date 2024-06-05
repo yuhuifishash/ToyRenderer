@@ -28,6 +28,7 @@ namespace PhotonMap
         createCausticsPhotonMap();
 
         GlobalpnMap->BuildKdTree();
+        CausticspnMap->BuildKdTree();
         //  GlobalpnMap->PrintPhotonMap();
         PathTracingWithPhotonMap(pixels);
 

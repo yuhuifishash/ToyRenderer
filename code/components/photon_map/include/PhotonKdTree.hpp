@@ -1,6 +1,7 @@
 #pragma once
 #ifndef __PHOTON_KD_TREE_HPP__
 #define __PHOTON_KD_TREE_HPP__
+#include "scene/Scene.hpp"
 #include <queue>
 
 namespace PhotonMap
@@ -14,13 +15,23 @@ namespace PhotonMap
 		Photon* P = nullptr;
 	};
 
-	struct NearestPhotonsHandler {
+	struct pqnode {
 		Vec3 X;
-		float max_r2;
-		priority_queue<Photon*> q;
+		Photon* P;
+		pqnode(Vec3& x, Photon* p) {
+			X = x;
+			P = p;
+		}
+		bool operator < (const pqnode& x) const;
 	};
 
-	//直接利用数组存储完全二叉树，完全二叉树数组索引从1开始，光子数组索引从0开始
+	struct NearestPhotonsHandler {
+		Vec3 X;
+		int N;
+		float max_r2;
+		priority_queue<pqnode> q;
+	};
+
 	class PhotonKdTree 
 	{
 		int NodeNum = -1;
@@ -38,12 +49,14 @@ namespace PhotonMap
 		}
 		~PhotonKdTree() {
 			delete[]T;
+			Vp.clear();
 		}
 
 		int BuildKdTree(int l, int r, int axis);
 
-		void GetNearestNPhotons(NearestPhotonsHandler& handler);
+		void GetNearestNPhotons(NearestPhotonsHandler& handler, int idx);
 
+		void PrintKdTree(int idx, int space);
 	};
 }
 #endif

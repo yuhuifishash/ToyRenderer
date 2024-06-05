@@ -9,7 +9,7 @@ namespace PhotonMap
 			cout << p.Pos << "\n";
 		}
 	}
-    static struct pdnode {
+    struct pdnode {
         int photon_index;
         float d2;
         bool operator<(const pdnode& x)const {
@@ -18,7 +18,7 @@ namespace PhotonMap
     };
 
     //<photons, max_r2>
-    tuple<std::vector<Photon>, float> PhotonMap::GetNearestNPhotonsDebug(const Vec3& pos, int N, float R) {
+    tuple<std::vector<Photon*>, float> PhotonMap::GetNearestNPhotonsDebug(const Vec3& pos, int N, float R) {
         //we use brute_force first
         std::vector<pdnode> V;
         for (int i = 0; i < PhotonNum; ++i) {
@@ -31,12 +31,36 @@ namespace PhotonMap
         if (V.size() > N) {
             sort(V.begin(), V.end());
         }
-        std::vector<Photon> res;
+        std::vector<Photon*> res;
         float max_r2;
         for (int i = 0; i < min((size_t)N, V.size()); ++i) {
-            res.push_back(PhotonM[V[i].photon_index]);
+            res.push_back(&(PhotonM[V[i].photon_index]));
             max_r2 = max(max_r2, V[i].d2);
         }
         return { res,max_r2 };
+    }
+
+
+    void PhotonKdTree::PrintKdTree(int idx, int space) {
+        if (idx == -1 || idx >= PhotonNum) {
+            return;
+        }
+        for (int i = 0; i < space; ++i) {
+            cout << " ";
+        }
+        cout << T[idx].P->Pos << "  " << T[idx].axis;
+
+        PrintKdTree(T[idx].ls, space + 2);
+        PrintKdTree(T[idx].rs, space + 2);
+    }
+
+    void PhotonMap::KdTreeTest() {
+        Photon P;
+        P.Pos = { 3,4,5 };
+        StorePhoton(P);
+        P.Pos = { 5,6,7 };
+        StorePhoton(P);
+        P.Pos = { 1,2,3 };
+        StorePhoton(P);
     }
 }

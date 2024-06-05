@@ -8,6 +8,10 @@ namespace PhotonMap
 		KdTree->root = rt;
 	}
 
+	bool pqnode::operator < (const pqnode& x) const {
+		return glm::dot(X - P->Pos, X - P->Pos) < glm::dot(X - x.P->Pos, X - x.P->Pos);
+	}
+
 	static int GetNextAxis(int axis) {
 		if (axis <= 1) {
 			return axis + 1;
@@ -33,5 +37,43 @@ namespace PhotonMap
 		T[x].rs = BuildKdTree(mid + 1, r, GetNextAxis(axis));
 
 		return x;
+	}
+
+	float GetDistance(const Vec3& X, const Vec3& Ax, int axis) {
+		return X[axis] - Ax[axis];
+	}
+
+	void PhotonKdTree::GetNearestNPhotons(NearestPhotonsHandler& handler, int idx) {
+		if (idx >= PhotonNum || idx == -1) {
+			return;
+		}
+		auto now = T[idx];
+		float d_tmp = GetDistance(handler.X, now.P->Pos, now.axis);
+		float d_tmp2 = d_tmp * d_tmp;
+		if (d_tmp < 0) {//X在分界线左边
+			GetNearestNPhotons(handler, now.ls);
+			//判断是否有必要往右子树递归
+			if (d_tmp2 < handler.max_r2) {
+				GetNearestNPhotons(handler, now.rs);
+			}
+
+		}
+		else {//X在分界线右边
+			GetNearestNPhotons(handler, now.rs);
+			if (d_tmp2 < handler.max_r2) {
+				GetNearestNPhotons(handler, now.ls);
+			}
+		}
+
+		//考虑当前节点的光子
+		if (d_tmp2 < handler.max_r2) {
+			handler.q.push(pqnode(handler.X,now.P));
+			if (handler.q.size() > handler.N) { // 光子数超过N
+				handler.q.pop();
+				const auto& t = handler.q.top();
+				handler.max_r2 = glm::dot(t.X - t.P->Pos, t.X - t.P->Pos);
+			}
+		}
+
 	}
 }
